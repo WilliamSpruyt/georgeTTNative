@@ -1,0 +1,3 @@
+rootProject.name = 'georgeTTNative'
+
+include ':app'
