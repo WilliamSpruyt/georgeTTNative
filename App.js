@@ -36,24 +36,28 @@ export default class App extends Component<Props> {
       qstate: [],
       started: false,
       numQs: 5,
-      time: "0:30",
-      messagePic: null,
+      time: 30,
+      messagePic: welcome,
       message: "Welcome",
       picStyle: "welcome",
       textStyle: "welcometext",
       avTime: 0,
-      inPlay: true,
-
+      inPlay: false,
+      timeString: "",
       playerName: ""
     };
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.handlePrefs = this.handlePrefs.bind(this);
     // this.handleSlide = this.handleSlide.bind(this);
   }
   componentDidMount() {}
+  /* this.setState(
+    { inPlay: true },
+    this.setState({ qstate: this.handleSubmit() }, this.clock())
+  );*/
   handleSubmit() {
-    this.setState({ score: 0 });
     this.qlist.length = 0;
 
     for (var i = 0; i < this.state.numQs; i++) {
@@ -74,7 +78,11 @@ export default class App extends Component<Props> {
         />
       );
     }
-    return this.qlist;
+    this.setState({ score: 0, inPlay: true, qstate: this.qlist });
+    this.clock();
+  }
+  handlePrefs(pref, input) {
+    this.setState({ [pref]: input });
   }
   gameOver(mess, timer, pic) {
     clearTimeout(timer);
@@ -82,7 +90,7 @@ export default class App extends Component<Props> {
     this.setState({
       inPlay: false,
       qstate: [],
-      time: "0:30",
+
       message: mess,
       messagePic: pic
     });
@@ -121,16 +129,13 @@ export default class App extends Component<Props> {
     );
   }*/
   clock() {
-    let presentTime = this.state.time;
+    let presentTime = this.state.time - 1;
 
-    var timeArray = presentTime.split(/[:]+/);
-    var m = timeArray[0];
-    var s = this.checkSecond(timeArray[1] - 1);
-    if (s == 59) {
-      m = m - 1;
-    }
+    var m = Math.floor(presentTime / 60);
+    var s = presentTime - m * 60;
 
-    this.setState({ time: m + ":" + s });
+    this.s = this.checkSecond(s);
+    this.setState({ timeString: m + ":" + s, time: this.presentTime });
     this.timer = setTimeout(this.clock.bind(this), 1000);
     if (m == 0 && s == 0) {
       this.gameOver("You didn't do it", this.timer, fail);
@@ -192,11 +197,14 @@ export default class App extends Component<Props> {
   render() {
     return (
       <View style={styles.container}>
-        <EndGame
-          isHidden={this.state.inPlay}
-          pic={this.state.messagePic}
-          mess={this.state.message}
-        />
+        {!this.state.inPlay && (
+          <EndGame
+            pic={this.state.messagePic}
+            mess={this.state.message}
+            onPrefs={this.handlePrefs}
+            onClick={this.handleSubmit}
+          />
+        )}
         <Image
           style={{
             width: 50,
@@ -209,20 +217,9 @@ export default class App extends Component<Props> {
           }}
           source={baby}
         />
-        <Text style={styles.welcome}>Welcome</Text>
-        <Board time={this.state.time} score={this.state.score} />
 
-        <Button
-          onPress={() => {
-            this.setState(
-              { inPlay: true },
-              this.setState({ qstate: this.handleSubmit() }, this.clock())
-            );
-          }}
-          title="START"
-          color="#841584"
-          accessibilityLabel="Learn more about this purple button"
-        />
+        <Board time={this.state.timeString} score={this.state.score} />
+
         <View style={styles.container}>
           <FlatList
             extraData={this.state}
